@@ -1,0 +1,78 @@
+Creation of a limited directory hierarchy:
++ [ $ mkdir -pv $LFS/{bin,etc,lib,sbin,usr,var} ]
+    -> Create the directories so the programs compiled may
+       be installed in their final location.
++ [ $ case $(uname -m) in x86_64) mkdir -pv $LFS/lib64 ;; esac ]
+    -> in case of the actual machine hardware is a x86_64
+       we can create a folder that will contain lib64 programs.
+
+Creation of the a cross-compiler folder (see Chapter 6):
++ [ $ mkdir -pv $LFS/tools ]
+
+Create an user which is not root (4.3):
++ [ $ groupadd students ]
+    -> Add a new group that will contains students (because why the fuck
+       not.)
++ [ $ useradd -s /bin/bash -g students -m -k /dev/null lfs42stud ]
+    -> Create the user : lfs42stud
+        * "-s /bin/bash" -> set the default shell for this user
+        * "-g students" -> add this user to the group : students
+        * "-m" create an home directory for the user
+        * "-k /dev/null" -> "-k" option is to copying files of a skeleton
+                            directory, here nothing is needed to it's null.
+        * "lfs42stu" -> is the user name.
++ [ $ passwd lfs42stud ] -> give a password to lfs42stud (42born2code)
+
++ [ $ chown -v lfs42stud $LFS/{usr,lib,var,etc,bin,sbin,tools} ]
++ [ $ case $(uname -m) in x86_64) chown -v lfs42stud $LFS/lib64 ;; esac ]
++ [ $ chown -v lfs42stud $LFS/sources ]
+    -> Grand full access to all directories under $LFS to lfs42stud by
+       making it the directory owner. Like a sources forlder was create
+    set it too.
+
++ [ $ su - lfs42stud ] -> log on the user
+
+Setting up the environment:
++ [ $ cat > ~/.bash_profile << "EOF"
+    > exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
+    > EOF ] -> When logged on the user, this will create a clear environment
+               by running a shell with all new except for HOME, TERM and PS1.
+
++ [ $ cat > ~/.bashrc << "EOF"
+    > set +h
+    > umask 022
+    > LFS=/mnt/lfs
+    > LC_ALL=POSIX
+    > LFS_TGT=$(uname -m)-lfs-linux-gnu
+    > PATH=/usr/bin
+    > if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
+    > PATH=$LFS
+    > export LFS LC_ALL LFS_TGT PATH ]
+        * "set +h" -> Turn off the usage of hash table by bash to remerber the
+                      path of an executable. So bash will search the path when
+                      a program is to be run, and find the newly compiled tool
+                      in $LFS/tools when it's available without remembering
+                      a previous version of the same program in a different location.
+        * "umask 022" -> Set umask that the created file by the user are writable
+                         only by it but readable and executable by anyone.
+        * "LFS=/mnt/lfs" -> The LFS variable of mounting point
+        * "LC_ALL=POSIX" -> Controls certain programs localizations.
+        * "LFS_TGT=(uname -m)-lfs-linux-gnu"
+            -> machine description for when building the cross compiler and linker
+               and when cross compiling temporary toolchain.
+        * "PATH=/usr/bin" -> Standard path variable set to /usr/bin.
+        * "if [ ! -L /bin ]; then PATH=/bin:$PATH; fi"
+            -> if "/bin" is not a symbolic link, it's added to path variable.
+        * "PATH=$LFS/tools/bin:PATH" -> by adding that the cross-compiler is picked
+                                        by the shell immediately after its installation.
+                                        This + turn of hashing limits that the compiler
+                                        used is the compiler from the host and not the cross
+                                        compiler.
+        * "export LFS LC_ALL LFS_TGT PATH" -> export the variable
++ [ $ source ~/.bash_profile ] -> source the create bash profile
+
+SBUs (Standard Build Unit s):
++ 1 SBU is the time taken to compile the first package of a list of packages to compile.
+    -> Exemple : build_1 compile in 10 minutes so :
+        * build_1 = 10 minutes = 1 SBU
+    -> so if build_2 = 4.5 SBU so build_2 = 45 minutes

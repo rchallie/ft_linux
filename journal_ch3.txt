@@ -2,5 +2,9 @@ Packages and patches (3.1) :
 + [ $ mkdir -v $LFS/sources ] -> to create a working directories for the packages
 + [ $ chmod -v a+wt $LFS/sources ] -> to set the directory writable and "Sticky"
                                       (Sticky = only owner can delete a file)
-+ [ $ wget http://www.linuxfromscratch.org/lfs/view/stable/wget-list ] -> download the list of packages
-+ [ $]
++ [ $ curl -L -O github.com/rchallie/ft_linux/raw/master/wget-list ]
+    -> to get my list of download for the packages
++ [ $ wget --input-file=wget-list --continue --directory-prefix=$LFS/sources ]
+    -> Will download every packages from wget-list
++ [ $ curl -L -O github.com/rchallie/ft_linux/raw/master/md5sums ]
+    -> check that every packages are downloaded
