@@ -1,0 +1,91 @@
+Virtual Machine used :
++ gentoo (https://www.gentoo.org/downloads/)
+    * Easy install
+    * Everything needed already install
+    * Low size of memory needed (427 MB)
++ Config :
+    * RAM 2048
+    * Hard disk
+    * Dynamic size
+    * 22.2 GB
+    - System -> Motherboard
+        * Remove floppy disk
+        * Chipset : ICH9
+        * Pointing Device : PS/2 Mouse
+    - System -> Processor
+        * 2 CPUs (better compilation)
+        * Enable PAE/NX
+    - Storage :
+        * Remove IDE Controller
+        * Use Host I/O Cache (better performance)
+        * Add Gentoo iso to SATA controller
+    - Network -> Adapter 1
+        * Attached to Bridget Adapter
+
+Check tools :
++ Use "version-check.sh" [ $ bash version-check.sh ] 
+
+Creation of partitions needed (2.4 in the Bible):
+    [ $ fdisk /dev/sda ] to go on disk
+    * fdisk commands :
+        - "p" -> give information about the disk 
+        - "n" -> create a new partition
+        - "t" -> set the type of a partition
+    * Entering in fdisk menu in remain memory (actually VM disk)
+        - The device does not have a recognized partition table.
+
++ /boot partition :
+    * Create a /boot partition to set kernel and booting informations.
+        - (1) [ $ n ] -> (new) create a new partition)
+        - (2) [ $ p ] -> (primary) config as a primary partition
+        - (3) [ $ 1 ] -> set the partition number
+        - (4) [ $ (PRESS ENTER) ] -> use the default first sector
+        - (5) [ $ +200M ] -> set the last sector to : first sector + 1 Gigabyte
+        - [ $ p ] show disk informations + partitions informations     
++ Swap partition :
+    * Create a swap partition (A swap partition is an extension of the
+      RAM, it's used if the RAM is overbooked, then it's not necessary
+      but it increase the performance).
+        - (1) [ $ n ] -> (new) create a new partition)
+        - (2) [ $ p ] -> (primary) config as a primary partition
+        - (3) [ $ 2 ] -> set the partition number
+        - (4) [ $ (PRESS ENTER) ] -> use the default first sector
+        - (5) [ $ +2G ] -> set the last sector to : first sector + 1 Gigabyte
+        - [ $ p ] show disk informations + partitions informations     
+        - (6) [ $ t ] -> (type) to change type of a partition (use partition 1
+                         because it's the only one
+        - [ $ L ] give a list of the types
+        - (7) [ $ 82 ] -> to set the partition to "Linux swap partition"
+        - [ $ p ] to check if ID is set to 82 and type to linux swap
++ Root partition :
+    * (1) [ $ n ] -> create new partition
+    * (2) [ $ p ] -> primary partition
+    * (3) [ $ 3 ] -> partition number
+    * (4) [ $ (PRESS ENTER) ] -> use the default first sector
+    * (5) [ $ +20G ] -> to set the last sector to the end
+    * [ $ p ] to check that the partition size if to 7G
++ [ $ w ] to write the modification on the disk
++ [ $ fdisk -l ] will show that we have two partion on the disk
+
+Format the partition of file system (2.5 in the Bible):
++ [ $ mkfs -v -t ext4 /dev/sda1 \
+    && mkfs -v -t ext4 /dev/sda3 ] (not sure about "ext4", here the partitions are 
+                                   small partitions, then "ext2" seems to be more
+                                   appropriate, but "ext4" is laster version of
+                                   ext file, use nano-second timestamps and has
+                                   a speed improvements)
+                                   -> "/dev/sda" & "/dev/sda3" is the LFS partition
++ [ $ mkswap /dev/sda2 ] -> Initialize the swap partition
+
+Set up the LFS environment variable :
++ [ $ export LFS=/mnt/lfs ] (value used in the Bible)
+                            -> the variable will be used on a lot of commands.
+
+Mounting the new partition (2.7 in the Bible) :
++ [ $ mkdir -pv $LFS ] -> create the mount file of root partition
++ [ $ mount -v -t ext4 /dev/sda3 $LFS ] -> "sda3" is the root partition
++ [ $ mkdir -v $LFS/boot ] -> create the mount file of /boot partition
++ [ $ mount -v -t ext4 /dev/sda1 $LFS/boot ] -> "sda1" is the /boot partition
++ Set the swap partition to on:
+    * [ $ /sbin/swapon -v /dev/sda2 ] "sda2" is the swap partition
+
