@@ -39,6 +39,7 @@ ac7ec9cedad48f4c279251cddc72008a  kbd-2.3.0.tar.xz
 f22cd619e04ae7b88a6a0c109b9523eb  libcap-2.42.tar.xz
 dad443d0911cf9f0f1bd90a334bc9004  libpipeline-1.5.3.tar.gz
 1bfb9b923f2c1339b4d2ce1807064aa5  libtool-2.4.6.tar.xz
+2656fe1a0942856c8740468d175e39b6  linux-5.8.3.tar.xz
 730bb15d96fffe47e148d1e09235af82  m4-1.4.18.tar.xz
 fc7a67ea86ace13195b0bce683fd4469  make-4.3.tar.gz
 4c8721faa54a4c950c640e5e5c713fb0  man-db-2.9.3.tar.xz
@@ -67,3 +68,4 @@ e07b0c1e71aa059cdfddc7c93c00c62a  vim-8.2.1361.tar.gz
 80bb18a8e6240fcf7ec2f7b57601c170  XML-Parser-2.46.tar.gz
 aa1621ec7013a19abab52a8aff04fe5b  xz-5.2.5.tar.xz
 85adef240c5f370b308da8c938951a68  zlib-1.2.11.tar.xz
+9a5997c3452909b1769918c759eff8a2  glibc-2.32-fhs-1.patch

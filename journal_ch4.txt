@@ -21,7 +21,7 @@ Create an user which is not root (4.3):
         * "-k /dev/null" -> "-k" option is to copying files of a skeleton
                             directory, here nothing is needed to it's null.
         * "lfs42stu" -> is the user name.
-+ [ $ passwd lfs42stud ] -> give a password to lfs42stud (42born2code)
++ [ $ passwd lfs42stud ] -> give a password to lfs42stud (42stud)
 
 + [ $ chown -v lfs42stud $LFS/{usr,lib,var,etc,bin,sbin,tools} ]
 + [ $ case $(uname -m) in x86_64) chown -v lfs42stud $LFS/lib64 ;; esac ]
@@ -46,8 +46,9 @@ Setting up the environment:
     > LFS_TGT=$(uname -m)-lfs-linux-gnu
     > PATH=/usr/bin
     > if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
-    > PATH=$LFS
-    > export LFS LC_ALL LFS_TGT PATH ]
+    > PATH=$LFS/tools/bin:$PATH
+    > export LFS LC_ALL LFS_TGT PATH
+    > EOF]
         * "set +h" -> Turn off the usage of hash table by bash to remerber the
                       path of an executable. So bash will search the path when
                       a program is to be run, and find the newly compiled tool
@@ -70,9 +71,3 @@ Setting up the environment:
                                         compiler.
         * "export LFS LC_ALL LFS_TGT PATH" -> export the variable
 + [ $ source ~/.bash_profile ] -> source the create bash profile
-
-SBUs (Standard Build Unit s):
-+ 1 SBU is the time taken to compile the first package of a list of packages to compile.
-    -> Exemple : build_1 compile in 10 minutes so :
-        * build_1 = 10 minutes = 1 SBU
-    -> so if build_2 = 4.5 SBU so build_2 = 45 minutes

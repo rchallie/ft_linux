@@ -1,13 +1,12 @@
 Virtual Machine used :
-+ gentoo (https://www.gentoo.org/downloads/)
++ Debian 10 (or use VM of README of the suject)
     * Easy install
-    * Everything needed already install
-    * Low size of memory needed (427 MB)
+    * Low size of memory needed
+    * No desktop environment needed
 + Config :
     * RAM 2048
-    * Hard disk
-    * Dynamic size
-    * 22.2 GB
+    * Hard disk Dynamic size 40 GB
+    + Hard disk Dynamic size 22.2 GB
     - System -> Motherboard
         * Remove floppy disk
         * Chipset : ICH9
@@ -22,11 +21,33 @@ Virtual Machine used :
     - Network -> Adapter 1
         * Attached to Bridget Adapter
 
+/!\ EVERYTHING IS ON ROOT. /!\
+
+Installing:
++ Binutils:
+    * [ $ nano /etc/apt/sources.list ]
+    * Add "deb http://ftp.de.debian.org/debian buster main" to the file
+    * [ $ apt-get install binutils ]
++ Bison:
+    * [ $ apt-get install bison ]
++ Gawk:
+    * [ $ apt-get install gawk ]
++ Gcc:
+    * [ $ apt-get install gcc ]
++ Glibc:
+    * [ $ apt-get install g++ ]
++ Make:
+    * [ $ apt-get install make ]
++ Patch:
+    * [ $ apt-get install patch ]
++ Texinfo:
+    * [ $ apt-get install texinfo ]
+
 Check tools :
-+ Use "version-check.sh" [ $ bash version-check.sh ] 
++ Use "version-check.sh" [ $ bash version-check.sh ]
 
 Creation of partitions needed (2.4 in the Bible):
-    [ $ fdisk /dev/sda ] to go on disk
+    [ $ fdisk /dev/sdb ] to go on the second disk 
     * fdisk commands :
         - "p" -> give information about the disk 
         - "n" -> create a new partition
@@ -68,14 +89,14 @@ Creation of partitions needed (2.4 in the Bible):
 + [ $ fdisk -l ] will show that we have two partion on the disk
 
 Format the partition of file system (2.5 in the Bible):
-+ [ $ mkfs -v -t ext4 /dev/sda1 \
-    && mkfs -v -t ext4 /dev/sda3 ] (not sure about "ext4", here the partitions are 
++ [ $ mkfs -v -t ext4 /dev/sdb1 \
+    && mkfs -v -t ext4 /dev/sdb3 ] (not sure about "ext4", here the partitions are 
                                    small partitions, then "ext2" seems to be more
                                    appropriate, but "ext4" is laster version of
                                    ext file, use nano-second timestamps and has
                                    a speed improvements)
-                                   -> "/dev/sda" & "/dev/sda3" is the LFS partition
-+ [ $ mkswap /dev/sda2 ] -> Initialize the swap partition
+                                   -> "/dev/sdb" & "/dev/sdb3" is the LFS partition
++ [ $ mkswap /dev/sdb2 ] -> Initialize the swap partition
 
 Set up the LFS environment variable :
 + [ $ export LFS=/mnt/lfs ] (value used in the Bible)
@@ -83,9 +104,9 @@ Set up the LFS environment variable :
 
 Mounting the new partition (2.7 in the Bible) :
 + [ $ mkdir -pv $LFS ] -> create the mount file of root partition
-+ [ $ mount -v -t ext4 /dev/sda3 $LFS ] -> "sda3" is the root partition
++ [ $ mount -v -t ext4 /dev/sdb3 $LFS ] -> "sdb3" is the root partition
 + [ $ mkdir -v $LFS/boot ] -> create the mount file of /boot partition
-+ [ $ mount -v -t ext4 /dev/sda1 $LFS/boot ] -> "sda1" is the /boot partition
++ [ $ mount -v -t ext4 /dev/sdb1 $LFS/boot ] -> "sdb1" is the /boot partition
 + Set the swap partition to on:
-    * [ $ /sbin/swapon -v /dev/sda2 ] "sda2" is the swap partition
+    * [ $ /sbin/swapon -v /dev/sdb2 ] "sdb2" is the swap partition
 

@@ -1,0 +1,140 @@
+SBUs (Standard Build Unit s):
++ 1 SBU is the time taken to compile the first package of a list of packages to compile.
+    -> Exemple : build_1 compile in 10 minutes so :
+        * build_1 = 10 minutes = 1 SBU
+    -> so if build_2 = 4.5 SBU so build_2 = 45 minutes
+
+Creation of the cross compiler: 
++ For packages :
+    * (1) Place all the sources and patches in a directory that will be accessible from the chroot environment such as /mnt/lfs/sources/.
+    * (2) Change to the sources directory.
+    * (3) For each package:
+        - (a) Using the tar program, extract the package to be built.
+            In Chapter 5 and Chapter 6, ensure you are the lfs user when extracting the package.
+        - (b) Change to the directory created when the package was extracted.
+        - (c) Follow the book's instructions for building the package.
+        - (d) Change back to the sources directory.
+        - (e) Delete the extracted source directory unless instructed otherwise.
++ [ $ cd $LFS/sources/ ] -> go to sources
++ Binutils:
+    * (a) [ $ tar xvf binutils-2.35.tar.xz ]
+    * (b) [ $ cd binutils-2.35 ]
+    * (c) :
+        - [ $ mkdir -v build ]
+        - [ $ cd build ]
+        - [ $ time { ../configure \
+            --prefix=$LFS/tools   \     -> install binutils in $LFS/tools
+             --with-sysroot=$LFS  \     -> check in $LFS to target libraries as needed
+             --target=LFS_TGT     \     -> adjust binutils's build systel for a cross linker
+             --disable-nls        \     -> need to be disable for temporary tools
+             --disable-werror     \     -> don't stop if an error appear
+            && make && make install; } ] -> use time to the first to know what is 1 SBU (2m12.426s for me)
++ GCC:
+    * (a) [ $ tar xvf gcc-10.2.0.tar.xz ]
+    * (b) [ $ cd gcc-10.2.0 ]
+    * (c) :
+        - It need GMP, MPFD and MPC packages:
+            ÷ [ $ tar -xf ../mpfr-4.1.0.tar.xz ]
+            ÷ [ $ mv -v mpfr-4.1.0 mpfr ]
+            ÷ [ $ tar -xf ../gmp-6.2.0.tar.xz ]
+            ÷ [ $ mv -v gmp-6.2.0 gmp ]
+            ÷ [ $ tar -xf ../mpc-1.1.0.tar.xz ]
+            ÷ [ $ mv -v mpc-1.1.0 mpc ]
+        - [ $ case $(uname -m) in x86_64) \         -> in case of hosts is on x86_64
+                sed -e '/m64=/s/lib64/lib/' \       -> set default directory name for 64-bit libraries to "lib"
+                    -i.orig gcc/config/i386/t-linux64
+                ;; esac ]
+        - [ $ mkdir -v build ]
+        - [ $ cd build ]
+        - [ $ ../configure                                     \
+                --target=$LFS_TGT                              \
+                --prefix=$LFS/tools                            \
+                --with-glibc-version=2.11                      \    -> Ensure compatibility with host version
+                --with-sysroot=$LFS                            \
+                --with-newlib                                  \    -> prevents the compiling of code that requires libc suppport.
+                --without-headers                              \    -> prevents GCC from looking standards headers
+                --enable-initfini-array                        \    -> force to use internal data structures that are needed
+                --disable-nls                                  \
+                --disable-shared                               \    -> switch forces GCC to link internal lib. Because other are not installed.
+                --disable-multilib                             \    -> disable multilib because x86_64 doesn't support it
+                --disable-decimal-float                        \    }
+                --disable-threads                              \    }
+                --disable-libatomic                            \    }
+                --disable-libgomp                              \    } -> disable because not compatible with cross-compiling on temporary libc.
+                --disable-libquadmath                          \    }
+                --disable-libssp                               \    }
+                --disable-libvtv                               \    }
+                --disable-libstdcxx                            \
+                --enable-languages=c,c++]   -> ensure that only the C and C++ compilers are built.
+        - [ $ make && make install ]
+        - [ $ cd .. ]
+        - [ $ cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
+                `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/install-tools/include/limits.h ]
+                    -> create a full version of the internal header identical to GCC
+
++ Linux headers :
+    * (a) [ $ tar xvf linux-5.8.3.tar.xz ]
+    * (b) [ $ cd linux-5.8.3 ]
+    * (c) :
+        - [ $ make mrproper ] -> remove stale files of the package
+        - [ $ make headers ] -> extract kernel headers
+        - [ $ find usr/include -name '.*' -delete ]
+            -> remove non utils files
+        - [ $ rm usr/include/Makefile ] -> Makefile useless
+        - [ $ cp -rv usr/include $LFS/usr ]
+            -> copy headers to $LFS/usr
+
++ Glibc :
+    * (a) [ $ tar xvf glibc-2.32.tar.xz ]
+    * (b) [ $ cd glibc-2.32.tar.xz ]
+    * (c) :
+        - [ $ case $(uname -m) in
+                i?86)   ln -sfv ld-linux.so.2 $LFS/lib/ld-lsb.so.3
+                ;;
+                x86_64) ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
+                        ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.3
+                ;;
+            esac ] -> create symlinks for proper operation of the
+                      dynamic library loader
+        - [ $ patch -Np1 -i ../glibc-2.32-fhs-1.patch ]
+            -> patch filesystem hierarchy to store runtime datas in FHS-compliant
+            -> patch from linuxfromscratch
+        - [ $ mkdir -v build ]
+        - [ $ cd build ]
+        - [ $ ../configure                         \
+                --prefix=/usr                      \
+                --host=$LFS_TGT                    \ }
+                --build=$(../scripts/config.guess) \ }  -> Glibc configure itself to be cross-compiled
+                --enable-kernel=3.2                \    -> Glibc compile the lib for >= 3.2 kernel version 
+                --with-headers=$LFS/usr/include    \    -> Use libraries from $LFS
+                libc_cv_slibdir=/lib ] -> install lib in /lib instead /lib64 on 64 machines.
+        - [ $ make ]
+        - [ $ make DESTDIR=$LFS install ]
+            -> "DESTDIR=$LFS" -> set destination of installation
+        - Check if everything is well installed :
+            -> [ $ echo 'int main(){}' > dummy.c ] : create test file
+            -> [ $ $LFS_TGT-gcc dummy.c ] : compile the file
+            -> [ $ readelf -l a.out | grep '/ld-linux' ]
+                -> if everything is okay, output is :
+                    [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
+            -> [ $rm -v dummy.c a.out ] : rm tests files
+        - Finalize the installation of the limits.h :
+            -> [ $ $LFS/tools/libexec/gcc/$LFS_TGT/10.2.0/install-tools/mkheaders ]
+
++ Install c++ lib for checking that the toolchain is installed:
+    * (a) [ $ tar xvf gcc-10.2.0.tar.xz ] -> the lib is in gcc package
+    * (b) [ $ cd gcc-10.2.0 ]
+    * (c) :
+        - [ $ mkdir -v build ]
+        - [ $ cd build ]
+        - [ $ ../libstdc++-v3/configure         \
+                --host=$LFS_TGT                 \ }
+                --build=$(../config.guess)      \ } -> built in /usr/bin
+                --prefix=/usr                   \ }
+                --disable-multilib              \
+                --disable-nls                   \
+                --disable-libstdcxx-pch         \ -> prevents the installation of precompiled include files
+                --with-gxx-include-dir=/tools/$LFS_TGT/include/c++/10.2.0 ]
+                    -> path to the standard include files for c++ compiler
+        - [ $ make ]
+        - [ $ make DESTDIR=$LFS install ]
